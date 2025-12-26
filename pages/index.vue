@@ -1,26 +1,39 @@
 <template>
-  <div>
-    <h1>Ma Boutique Printful x YouCan</h1>
-    <button @click="importProducts" :disabled="loading">
-      {{ loading ? 'Importation en cours...' : 'Importer mes produits Printful' }}
+  <div style="padding: 20px; font-family: sans-serif;">
+    <h1>Synchronisation Printful</h1>
+    <p>Cliquez sur le bouton pour importer vos produits Printful vers votre boutique YouCan.</p>
+    
+    <button 
+      @click="startImport" 
+      :disabled="isImporting"
+      style="padding: 10px 20px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px;"
+    >
+      {{ isImporting ? 'Importation en cours...' : 'Lancer l\'importation' }}
     </button>
-    <p v-if="message">{{ message }}</p>
+
+    <div v-if="statusMessage" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc;">
+      {{ statusMessage }}
+    </div>
   </div>
 </template>
 
 <script setup>
-const loading = ref(false);
-const message = ref('');
+import { ref } from 'vue';
 
-async function importProducts() {
-  loading.value = true;
+const isImporting = ref(false);
+const statusMessage = ref('');
+
+const startImport = async () => {
+  isImporting.value = true;
+  statusMessage.value = "Connexion aux API en cours...";
+  
   try {
-    const response = await $fetch('/api/sync-products');
-    message.value = response.message;
+    const data = await $fetch('/api/import-printful', { method: 'POST' });
+    statusMessage.value = `Succès ! ${data.count} produits ont été ajoutés à votre boutique YouCan.`;
   } catch (err) {
-    message.value = "Erreur lors de l'importation";
+    statusMessage.value = "Erreur : " + err.statusMessage;
   } finally {
-    loading.value = false;
+    isImporting.value = false;
   }
-}
+};
 </script>
